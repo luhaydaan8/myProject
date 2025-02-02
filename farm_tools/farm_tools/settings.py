@@ -37,10 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     'myfarm_tools',
-     'rest_framework',
-     'rest_framework_simplejwt',
-      'rest_framework_simplejwt.token_blacklist',
+    'myfarm_tools',
+    'rest_framework',
+    #'rest_framework_simplejwt',
+   # 'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
       
 ]
 
@@ -52,7 +53,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Frontend development URL
+]
+
 
 ROOT_URLCONF = 'farm_tools.urls'
 
@@ -126,18 +133,18 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-}
+#REST_FRAMEWORK = {
+    #'DEFAULT_AUTHENTICATION_CLASSES': [
+       # 'rest_framework.authentication.SessionAuthentication',
+         #'rest_framework_simplejwt.authentication.JWTAuthentication',
+   # ],
+#}
 
 
 
 # REST Framework settings for JWT Authentication
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Protect views with authentication
+        #'rest_framework.permissions.IsAuthenticated',  # Protect views with authentication
     ],
 }

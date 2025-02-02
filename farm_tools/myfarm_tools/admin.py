@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Tool, Farmer, Loan, Maintenance
+from .models import *
+
+
+
 
 admin.site.register(Tool)
 admin.site.register(Farmer)

@@ -1,213 +1,145 @@
-from rest_framework import status
+from django.shortcuts import render
+from rest_framework.decorators import api_view
+from .models import *
+from .serializers import *
 from rest_framework.response import Response
+from rest_framework import status
+# Simple_jwt security features
+# from rest_framework.permissions import IsAuthenticated
+#from rest_framework.decorators import api_view
+from django.contrib.auth import authenticate
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import Tool, Farmer, Loan, Maintenance
-from .serializers import ToolSerializer, FarmerSerializer, LoanSerializer, MaintenanceSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.hashers import check_password
+from rest_framework.permissions import IsAuthenticated
 
-# Tool Views
-class ToolListCreate(APIView):
-    def get(self, request):
-        tools = Tool.objects.all()
-        serializer = ToolSerializer(tools, many=True)
+
+
+# Create your views here.
+
+# Customer table api
+
+
+
+'''
+@api_view(['GET','POST'])
+def get_and_post(request):
+    if request.method == 'GET':
+        cust = Customer.objects.all()
+        serializer = CustomerSerializer(cust, many = True)
         return Response(serializer.data)
 
-    def post(self, request):
-        serializer = ToolSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class ToolDetail(APIView):
-    def get(self, request, pk):
-        try:
-            tool = Tool.objects.get(pk=pk)
-        except Tool.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = ToolSerializer(tool)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        try:
-            tool = Tool.objects.get(pk=pk)
-        except Tool.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = ToolSerializer(tool, data=request.data)
+    elif request.method == 'POST':
+        serializer = CustomerSerializer(data = request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        try:
-            tool = Tool.objects.get(pk=pk)
-        except Tool.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response (serializer.errors)
         
-        tool.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+@api_view(['GET','PUT','DELETE'])
+def cusustomer_view(request,id):
+    try:
+        cust = Customer.objects.get(id = id)
+    except Customer.DoesNotExist:
+        return Response({'message':'Id not exists!'})
+    if request.method == 'GET':
+        seralizer = CustomerSerializer(cust)
+        return Response(seralizer.data)
 
-
-# Farmer Views
-class FarmerListCreate(APIView):
-    def get(self, request):
-        farmers = Farmer.objects.all()
-        serializer = FarmerSerializer(farmers, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = FarmerSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class FarmerDetail(APIView):
-    def get(self, request, pk):
-        try:
-            farmer = Farmer.objects.get(pk=pk)
-        except Farmer.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = FarmerSerializer(farmer)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        try:
-            farmer = Farmer.objects.get(pk=pk)
-        except Farmer.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = FarmerSerializer(farmer, data=request.data)
+    elif request.method == 'PUT':
+        serializer = CustomerSerializer(data = request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response (serializer.errors)
 
-    def delete(self, request, pk):
-        try:
-            farmer = Farmer.objects.get(pk=pk)
-        except Farmer.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
         
-        farmer.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    elif request.method == 'DELETE':
+        cust.delete()
+        return Response(f"Customer has been deleted")
+
+'''
 
 
-# Loan Views
-class LoanListCreate(APIView):
-    def get(self, request):
-        loans = Loan.objects.all()
-        serializer = LoanSerializer(loans, many=True)
-        return Response(serializer.data)
+def generic_api(model_class, serializer_class):
+    @api_view(['GET','POST', 'DELETE', 'PUT'])
+    # @permission_classes([IsAuthenticated])
 
+
+    def api(request, id = None):
+        if request.method == 'GET':
+            if id:
+                try:
+                    instance = model_class.objects.get(id = id)
+                    serializer = serializer_class(instance)
+                    return Response(serializer.data)
+                except model_class.DoesNotExist:
+                    return Response({'message':'Object Not Found'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                instance = model_class.objects.all()
+                serializer = serializer_class(instance, many = True)
+                return Response(serializer.data)
+
+        elif request.method == 'POST':
+            serializer = serializer_class(data=request.data)
+            if serializer.is_valid():
+                    serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)  # Success
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # If serializer is invalid
+
+
+        elif request.method == 'DELETE':
+            if id:
+                try:
+                    instance = model_class.objects.get(id = id)
+                    instance.delete()
+                    return Response({'message':'Delete Successfully'})
+                except model_class.DoesNotExist:
+                    return Response({'message':'Object Not Found'}, status=status.HTTP_404_NOT_FOUND)
+                
+
+        elif request.method == 'PUT':
+            if id:
+                try:
+                    instance = model_class.objects.get(id=id)
+                    serializer = serializer_class(instance, data=request.data)
+                    if serializer.is_valid():
+                        serializer.save()
+                    return Response(serializer.data)
+                
+                        
+                except model_class.DoesNotExist:
+                    return Response({'message': 'Object not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    return api
+
+
+manage_tool = generic_api(Tool, ToolSerializer)
+
+manage_farmer = generic_api(Farmer, FarmerSerializer)
+
+manage_loan = generic_api(Loan, LoanSerializer)
+
+manage_maintenance = generic_api(Maintenance, MaintenanceSerializer)
+
+
+#Login
+class LoginView(APIView):
     def post(self, request):
-        serializer = LoanSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
+
+            # Authenticate the user
+            user = authenticate(request, email=email, password=password)
+            if user is not None:
+                # If authentication is successful, return a success response
+                return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
+            else:
+                # If authentication fails
+                return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class LoanDetail(APIView):
-    def get(self, request, pk):
-        try:
-            loan = Loan.objects.get(pk=pk)
-        except Loan.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = LoanSerializer(loan)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        try:
-            loan = Loan.objects.get(pk=pk)
-        except Loan.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = LoanSerializer(loan, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        try:
-            loan = Loan.objects.get(pk=pk)
-        except Loan.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        loan.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# Maintenance Views
-class MaintenanceListCreate(APIView):
-    def get(self, request):
-        maintenances = Maintenance.objects.all()
-        serializer = MaintenanceSerializer(maintenances, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = MaintenanceSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class MaintenanceDetail(APIView):
-    def get(self, request, pk):
-        try:
-            maintenance = Maintenance.objects.get(pk=pk)
-        except Maintenance.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = MaintenanceSerializer(maintenance)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        try:
-            maintenance = Maintenance.objects.get(pk=pk)
-        except Maintenance.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = MaintenanceSerializer(maintenance, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        try:
-            maintenance = Maintenance.objects.get(pk=pk)
-        except Maintenance.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        maintenance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# Login (Obtain JWT Token) and Logout (Blacklist Token)
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
-
-# Login View - Generate access and refresh token
-class LoginView(TokenObtainPairView):
-    permission_classes = [AllowAny]  # Anyone can access this view
-
-# Logout View - Blacklist refresh token
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        try:
-            refresh_token = request.data.get('refresh')
-            token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the token to revoke it
-            return Response({"message": "Successfully logged out."}, status=200)
-        except Exception as e:
-            return Response({"message": str(e)}, status=400)

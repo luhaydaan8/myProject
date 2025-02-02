@@ -1,10 +1,10 @@
 from django.db import models
 from django.utils import timezone
 
-# Tool Model - represents farm tools that can be borrowed
 class Tool(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    quantity = models.IntegerField()
     tool_type = models.CharField(max_length=50, choices=[('manual', 'Manual'), ('mechanical', 'Mechanical')])
     condition = models.CharField(max_length=50, choices=[('new', 'New'), ('used', 'Used'), ('damaged', 'Damaged')])
     purchase_date = models.DateField()
@@ -13,19 +13,19 @@ class Tool(models.Model):
     def __str__(self):
         return self.name
 
-# Farmer Model - represents farmers who borrow the tools
+
 class Farmer(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=15)
-    address = models.TextField()
-    role = models.CharField(max_length=50, choices=[('owner', 'Owner'), ('worker', 'Worker')])
-
+    email = models.EmailField(unique=True,max_length=256)
+    phone_number = models.IntegerField(max_length=15)
+    address = models.CharField(max_length=50)
+    role = models.CharField(max_length=50)
+    password = models.CharField(max_length=50)
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
-# Loan Model - tracks the borrowing of tools by farmers
+
 class Loan(models.Model):
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     farmer = models.ForeignKey(Farmer, on_delete=models.CASCADE)
@@ -41,7 +41,7 @@ class Loan(models.Model):
             return True
         return False
 
-# Maintenance Model - tracks maintenance performed on tools
+
 class Maintenance(models.Model):
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     maintenance_date = models.DateField()
@@ -51,3 +51,6 @@ class Maintenance(models.Model):
 
     def __str__(self):
         return f'Maintenance for {self.tool} on {self.maintenance_date}'
+
+
+
