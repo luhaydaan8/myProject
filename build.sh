@@ -1,7 +1,8 @@
-set 
-pip install -r requirement.txt
-python manage.py collectstatic --
+pip install -r requirements.txt
+
+python manage.py collectstatic --noinput
 python manage.py migrate
-if[SECRET_SUPERUSER];
-then
-python manage.py createsuperuser --no-input
+
+if [ -n "$SECRET_SUPERUSER" ]; then
+    python manage.py createsuperuser --no-input
+fi
